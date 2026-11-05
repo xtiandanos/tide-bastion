@@ -9,6 +9,7 @@ import {
   upgradeTower,
   sellTower,
   startWave,
+  setAuto,
 } from './engine'
 import { TILE, TOWER_ORDER } from './config'
 import './game.css'
@@ -44,6 +45,10 @@ export default function GameCanvas({ phase, runToken, speed, apiRef, onHud, onOv
           if (g.placing) g.selectedId = null
         },
         sendWave: () => startWave(engineRef.current),
+        toggleAuto: () => {
+          const g = engineRef.current
+          setAuto(g, !g.auto)
+        },
         upgradeSelected: () => {
           const g = engineRef.current
           const t = g.towers.find((tw) => tw.id === g.selectedId)

@@ -11,7 +11,7 @@ import { drawWorld } from './art'
 export type { Enemy, EnemyKind, Effect, Hover, Projectile, Tower, TowerKind }
 export { BOARD, TOWER_TYPES, MAX_LEVEL } from './config'
 export { upgradeCost, sellValue, placeTower, upgradeTower, sellTower, towerStats, canPlace } from './towers'
-export { startWave, waveNumber, allWavesSent } from './waves'
+export { startWave, waveNumber, allWavesSent, setAuto, AUTO_DELAY } from './waves'
 
 export interface Game {
   t: number
@@ -19,6 +19,8 @@ export interface Game {
   lives: number
   wave: number // waves started (1-based once the current one is in flight)
   waveActive: boolean
+  auto: boolean // auto-surge: next wave fires itself after a countdown
+  autoTimer: number // countdown to the next auto wave, seconds
   over: boolean
   won: boolean
   kills: number
@@ -44,6 +46,8 @@ export function createGame(): Game {
     lives: START_LIVES,
     wave: 0,
     waveActive: false,
+    auto: false,
+    autoTimer: 0,
     over: false,
     won: false,
     kills: 0,
@@ -93,6 +97,8 @@ export interface Hud {
   over: boolean
   won: boolean
   kills: number
+  auto: boolean
+  autoCountdown: number | null // seconds until the next auto surge, null when idle/off
   placing: TowerKind | null
   selected: {
     id: number
@@ -116,6 +122,11 @@ export function hudSnapshot(g: Game): Hud {
     over: g.over,
     won: g.won,
     kills: g.kills,
+    auto: g.auto,
+    autoCountdown:
+      g.auto && !g.waveActive && !g.won && !g.over && g.wave < WAVES.length
+        ? Math.ceil(g.autoTimer)
+        : null,
     placing: g.placing,
     selected:
       tower == null

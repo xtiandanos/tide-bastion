@@ -104,6 +104,17 @@
   font-weight: 700;
 }
 
+.tb-auto {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.tb-auto[data-on] {
+  border-color: var(--tb-gold);
+  color: var(--tb-gold);
+  font-weight: 700;
+}
+
 .tb-sell:not(:disabled) {
   color: var(--tb-danger);
 }

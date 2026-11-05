@@ -40,7 +40,25 @@ export function startWave(g: Game): boolean {
   return true
 }
 
+// Toggle auto-surge. Turning it on arms a short countdown before the next
+// wave fires itself (so you still get a breather to build).
+export function setAuto(g: Game, on: boolean): void {
+  g.auto = on
+  if (on && !g.waveActive && !g.won && g.wave < WAVES.length) {
+    g.autoTimer = AUTO_DELAY
+  }
+}
+
+export const AUTO_DELAY = 3
+
 export function updateWaves(g: Game, dt: number): void {
+  // between waves: auto mode counts down to the next surge
+  if (!g.waveActive && g.auto && !g.won && !g.over && g.wave < WAVES.length) {
+    if (g.autoTimer <= 0) g.autoTimer = AUTO_DELAY
+    g.autoTimer -= dt
+    if (g.autoTimer <= 0) startWave(g)
+    return
+  }
   if (!g.waveActive) return
   g.waveTime += dt
 
@@ -56,6 +74,8 @@ export function updateWaves(g: Game, dt: number): void {
     g.gold += wave.bonus
     if (g.wave >= WAVES.length) {
       g.won = true
+    } else if (g.auto) {
+      g.autoTimer = AUTO_DELAY
     }
   }
 }

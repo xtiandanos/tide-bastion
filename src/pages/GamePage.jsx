@@ -52,7 +52,19 @@ export default function GamePage() {
               disabled={hud.waveActive}
               onClick={() => apiRef.current?.sendWave()}
             >
-              {hud.waveActive ? `Surge ${hud.wave} incoming…` : 'Send Next Surge'}
+              {hud.waveActive
+                ? `Surge ${hud.wave} incoming…`
+                : hud.autoCountdown != null
+                  ? `Send Now (${hud.autoCountdown}s)`
+                  : 'Send Next Surge'}
+            </button>
+            <button
+              className="tb-btn tb-auto"
+              data-on={hud.auto || undefined}
+              onClick={() => apiRef.current?.toggleAuto()}
+              title="Auto-surge: the next wave fires itself after a 3s countdown"
+            >
+              {hud.auto ? 'Auto ON' : 'Auto OFF'}
             </button>
             <button
               className="tb-btn tb-speed"
