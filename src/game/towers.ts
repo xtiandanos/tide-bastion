@@ -41,8 +41,18 @@ export function towerStats(tower: Tower) {
   }
 }
 
+// Towers need breathing room: no other tower in any of the 8 surrounding
+// tiles (Chebyshev distance >= 2), so scaled-up towers never overlap.
+export function nearAnotherTower(g: Game, col: number, row: number): boolean {
+  return g.towers.some(
+    (t) => Math.max(Math.abs(t.col - col), Math.abs(t.row - row)) < 2,
+  )
+}
+
 export function canPlace(g: Game, col: number, row: number): boolean {
-  return isBuildableTile(col, row) && !g.occupied.has(`${col},${row}`)
+  return (
+    isBuildableTile(col, row) && !g.occupied.has(`${col},${row}`) && !nearAnotherTower(g, col, row)
+  )
 }
 
 export function placeTower(g: Game, kind: TowerKind, col: number, row: number): Tower | null {

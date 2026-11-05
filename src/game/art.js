@@ -405,7 +405,8 @@ const GOLD_DARK = '#a8873e'
 
 function drawTower(ctx, tower, t) {
   const { x, y, kind, level } = tower
-  const scale = 1.45 + (level - 1) * 0.12
+  // rank reads at a glance: each level is a clear size step up
+  const scale = [1.45, 1.8, 2.15][level - 1]
 
   // ornate pedestal: contact shadow → stepped stone drum → gold rim → spokes
   ctx.save()
@@ -452,7 +453,90 @@ function drawTower(ctx, tower, t) {
   else if (kind === 'spire') drawSpire(ctx, tower, scale, t)
 
   drawElementAura(ctx, tower, t)
+  drawRankOrnaments(ctx, tower, t)
   drawLevelPips(ctx, tower, t)
+}
+
+// Rank ornaments — upgrades must LOOK upgraded:
+//   Lv2: hovering gold band + twin pennant banners
+//   Lv3: beacon beam + orbiting gold emblems + crowned glow
+function drawRankOrnaments(ctx, tower, t) {
+  const { x, y, level } = tower
+  if (level < 2) return
+
+  const bob = Math.sin(t * 2) * 1.5
+
+  if (level >= 2) {
+    // hovering gold band around the pedestal
+    ctx.strokeStyle = GOLD
+    ctx.lineWidth = 2.2
+    ctx.globalAlpha = 0.85
+    ctx.beginPath()
+    ctx.ellipse(x, y - 2 + bob, 19, 13, 0, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.globalAlpha = 1
+
+    // twin pennant banners on poles
+    for (const side of [-1, 1]) {
+      const px = x + side * 17
+      ctx.strokeStyle = '#7a6234'
+      ctx.lineWidth = 1.6
+      ctx.beginPath()
+      ctx.moveTo(px, y - 8)
+      ctx.lineTo(px, y - 30)
+      ctx.stroke()
+      const sway = Math.sin(t * 3 + side) * 2.5
+      ctx.fillStyle = '#4fc3b0'
+      ctx.beginPath()
+      ctx.moveTo(px, y - 30)
+      ctx.quadraticCurveTo(px + side * 7, y - 27 + sway * 0.4, px + side * 9, y - 22 + sway)
+      ctx.quadraticCurveTo(px + side * 5, y - 20 + sway * 0.5, px, y - 21)
+      ctx.closePath()
+      ctx.fill()
+    }
+  }
+
+  if (level >= 3) {
+    // beacon beam of light rising from the tower
+    const beam = ctx.createLinearGradient(x, y - 20, x, y - 60)
+    beam.addColorStop(0, 'rgba(255,230,160,0.4)')
+    beam.addColorStop(1, 'rgba(255,230,160,0)')
+    ctx.fillStyle = beam
+    ctx.beginPath()
+    ctx.moveTo(x - 4, y - 20)
+    ctx.lineTo(x + 4, y - 20)
+    ctx.lineTo(x + 9, y - 58)
+    ctx.lineTo(x - 9, y - 58)
+    ctx.closePath()
+    ctx.fill()
+
+    // three orbiting gold emblems
+    for (let i = 0; i < 3; i++) {
+      const a = t * 1.6 + (i / 3) * Math.PI * 2
+      const ex = x + Math.cos(a) * 20
+      const ey = y - 16 + Math.sin(a) * 10
+      ctx.globalAlpha = 0.7 + Math.sin(t * 4 + i) * 0.3
+      ctx.fillStyle = GOLD
+      ctx.beginPath()
+      ctx.moveTo(ex, ey - 4)
+      ctx.lineTo(ex + 2.6, ey)
+      ctx.lineTo(ex, ey + 4)
+      ctx.lineTo(ex - 2.6, ey)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'
+      ctx.beginPath()
+      ctx.moveTo(ex, ey - 4)
+      ctx.lineTo(ex + 2.6, ey)
+      ctx.lineTo(ex, ey)
+      ctx.closePath()
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+
+    // crowned glow
+    fakeGlow(ctx, x, y - 14, 24, 'rgba(255,225,150,0.35)', 0.22 + Math.sin(t * 2.4) * 0.08)
+  }
 }
 
 // ---------------------------------------------------------------- elemental auras
@@ -893,7 +977,9 @@ function drawGhost(ctx, g, t) {
   const x = col * TILE + TILE / 2
   const y = row * TILE + TILE / 2
   const type = TOWER_TYPES[g.placing]
-  const valid = isBuildableTile(col, row) && !g.occupied.has(`${col},${row}`) && g.gold >= type.cost
+  const crowded = g.towers.some((tw) => Math.max(Math.abs(tw.col - col), Math.abs(tw.row - row)) < 2)
+  const valid =
+    isBuildableTile(col, row) && !g.occupied.has(`${col},${row}`) && !crowded && g.gold >= type.cost
   const color = valid ? '#7ee8d0' : '#ff7a6b'
 
   // tile cell highlight
