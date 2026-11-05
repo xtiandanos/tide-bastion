@@ -111,8 +111,8 @@ export interface EnemyType {
 }
 
 export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
-  minnow: { kind: 'minnow', name: 'Minnow', hp: 30, speed: 60, bounty: 6, dmg: 1, radius: 12 },
-  dart: { kind: 'dart', name: 'Dart', hp: 18, speed: 110, bounty: 5, dmg: 1, radius: 9 },
+  minnow: { kind: 'minnow', name: 'Minnow', hp: 30, speed: 60, bounty: 6, dmg: 1, radius: 16 },
+  dart: { kind: 'dart', name: 'Dart', hp: 18, speed: 110, bounty: 5, dmg: 1, radius: 13 },
   shoal: {
     kind: 'shoal',
     name: 'Shoal Spawner',
@@ -120,11 +120,11 @@ export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
     speed: 70,
     bounty: 4,
     dmg: 1,
-    radius: 14,
+    radius: 19,
     spawner: { kind: 'fry', count: 5, interval: 2.2 },
   },
-  fry: { kind: 'fry', name: 'Fry', hp: 10, speed: 80, bounty: 2, dmg: 1, radius: 6.5 },
-  brute: { kind: 'brute', name: 'Brute', hp: 140, speed: 38, bounty: 14, dmg: 2, radius: 17 },
+  fry: { kind: 'fry', name: 'Fry', hp: 10, speed: 80, bounty: 2, dmg: 1, radius: 9 },
+  brute: { kind: 'brute', name: 'Brute', hp: 140, speed: 38, bounty: 14, dmg: 2, radius: 22 },
   maw: {
     kind: 'maw',
     name: 'The Maw',
@@ -132,7 +132,7 @@ export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
     speed: 30,
     bounty: 80,
     dmg: 6,
-    radius: 24,
+    radius: 32,
     boss: true,
   },
 }

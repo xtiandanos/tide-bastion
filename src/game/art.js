@@ -13,6 +13,47 @@ function rnd(i) {
   return x - Math.floor(x)
 }
 
+// lighten (f > 0) or darken (f < 0) a #rrggbb color — pseudo-3D shading kit
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16)
+  const ch = (v) => {
+    const out = f >= 0 ? v + (255 - v) * f : v * (1 + f)
+    return Math.max(0, Math.min(255, Math.round(out)))
+  }
+  const r = ch((n >> 16) & 255)
+  const g = ch((n >> 8) & 255)
+  const b = ch(n & 255)
+  return `rgb(${r},${g},${b})`
+}
+
+// vertical volume gradient: lit top, shaded bottom — the core 3D look
+function volGrad(ctx, x, y, r, hex, f = 0.35) {
+  const g = ctx.createLinearGradient(x, y - r, x, y + r)
+  g.addColorStop(0, shade(hex, f))
+  g.addColorStop(0.55, hex)
+  g.addColorStop(1, shade(hex, -f))
+  return g
+}
+
+// soft contact shadow under a creature/structure — grounds it in the scene
+function groundShadow(ctx, x, y, rx, ry, alpha = 0.3) {
+  ctx.globalAlpha = alpha
+  ctx.fillStyle = '#03121b'
+  ctx.beginPath()
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.globalAlpha = 1
+}
+
+// crescent rim-light along a shape's top edge
+function rimLight(ctx, x, y, rx, ry, color = 'rgba(255,255,255,0.5)') {
+  ctx.strokeStyle = color
+  ctx.lineWidth = 1.6
+  ctx.beginPath()
+  ctx.ellipse(x, y, rx * 0.92, ry * 0.92, 0, Math.PI * 1.15, Math.PI * 1.85)
+  ctx.stroke()
+}
+
 // ---------------------------------------------------------------- world
 
 export function drawWorld(ctx, g) {
@@ -48,7 +89,7 @@ export function drawWorld(ctx, g) {
       ctx.arc(sel.x, sel.y, range, 0, Math.PI * 2)
       ctx.stroke()
       ctx.setLineDash([])
-      drawLevelPips(ctx, sel)
+      drawLevelPips(ctx, sel, t)
     }
   }
 
@@ -364,32 +405,34 @@ const GOLD_DARK = '#a8873e'
 
 function drawTower(ctx, tower, t) {
   const { x, y, kind, level } = tower
-  const scale = 1.12 + (level - 1) * 0.09
+  const scale = 1.45 + (level - 1) * 0.12
 
-  // ornate pedestal: shadow → dark ring → stone → gold rim → spokes
+  // ornate pedestal: contact shadow → stepped stone drum → gold rim → spokes
   ctx.save()
   ctx.translate(x, y)
-  ctx.fillStyle = 'rgba(6,20,28,0.55)'
+  groundShadow(ctx, 0, 7, 20 * scale, 13 * scale, 0.5)
+  // lower drum (darker, in shadow)
+  ctx.fillStyle = volGrad(ctx, 0, 4, 8, '#24485a', 0.25)
   ctx.beginPath()
-  ctx.ellipse(0, 5, 18 * scale, 12 * scale, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, 5, 19 * scale, 13 * scale, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = '#1d3d4c'
+  // upper drum
+  ctx.fillStyle = volGrad(ctx, 0, 0, 8, '#3d6878')
   ctx.beginPath()
-  ctx.ellipse(0, 3, 17 * scale, 12 * scale, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, 0, 15.5 * scale, 10.5 * scale, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = '#2e5261'
+  // stepped edge highlight
+  rimLight(ctx, 0, 0, 15.5 * scale, 10.5 * scale, 'rgba(190,240,255,0.4)')
+  // gold rim, doubled for a carved look
+  ctx.strokeStyle = GOLD_DARK
+  ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.ellipse(0, 1, 16 * scale, 11 * scale, 0, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.fillStyle = '#3d6878'
-  ctx.beginPath()
-  ctx.ellipse(0, -1, 14 * scale, 9.5 * scale, 0, 0, Math.PI * 2)
-  ctx.fill()
-  // gold rim
+  ctx.ellipse(0, 0, 15.5 * scale, 10.5 * scale, 0, 0, Math.PI * 2)
+  ctx.stroke()
   ctx.strokeStyle = GOLD
-  ctx.lineWidth = 1.3
+  ctx.lineWidth = 1
   ctx.beginPath()
-  ctx.ellipse(0, -1, 14 * scale, 9.5 * scale, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, -1.2, 14.5 * scale, 9.6 * scale, 0, 0, Math.PI * 2)
   ctx.stroke()
   // radial spokes
   ctx.strokeStyle = 'rgba(10,26,34,0.5)'
@@ -397,8 +440,8 @@ function drawTower(ctx, tower, t) {
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI + Math.PI
     ctx.beginPath()
-    ctx.moveTo(0, -1)
-    ctx.lineTo(Math.cos(a) * 13 * scale, -1 + Math.sin(a) * 9 * scale)
+    ctx.moveTo(0, 0)
+    ctx.lineTo(Math.cos(a) * 14 * scale, Math.sin(a) * 9.5 * scale)
     ctx.stroke()
   }
   ctx.restore()
@@ -408,7 +451,98 @@ function drawTower(ctx, tower, t) {
   else if (kind === 'battery') drawBattery(ctx, tower, scale, t)
   else if (kind === 'spire') drawSpire(ctx, tower, scale, t)
 
-  drawLevelPips(ctx, tower)
+  drawElementAura(ctx, tower, t)
+  drawLevelPips(ctx, tower, t)
+}
+
+// ---------------------------------------------------------------- elemental auras
+// Each tower visibly radiates its element — the power you paid for, on show.
+
+function drawElementAura(ctx, tower, t) {
+  const el = TOWER_TYPES[tower.kind].element
+  const { x, y } = tower
+  if (el === 'physical') {
+    // silver glints orbiting the mount, glinting when ready to fire
+    for (let i = 0; i < 2; i++) {
+      const a = t * 1.1 + i * Math.PI
+      const gx = x + Math.cos(a) * 17
+      const gy = y - 14 + Math.sin(a) * 8
+      ctx.globalAlpha = 0.5 + Math.sin(t * 6 + i * 2) * 0.3
+      ctx.strokeStyle = '#eef6fa'
+      ctx.lineWidth = 1.2
+      ctx.beginPath()
+      ctx.moveTo(gx - 3, gy)
+      ctx.lineTo(gx + 3, gy)
+      ctx.moveTo(gx, gy - 3)
+      ctx.lineTo(gx, gy + 3)
+      ctx.stroke()
+    }
+    ctx.globalAlpha = 1
+  } else if (el === 'ice') {
+    // pale mist pooling at the base + snowflakes drifting down around it
+    ctx.globalAlpha = 0.16 + Math.sin(t * 1.2) * 0.05
+    ctx.fillStyle = '#bfe9ff'
+    ctx.beginPath()
+    ctx.ellipse(x, y + 2, 22, 10, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 1
+    for (let i = 0; i < 6; i++) {
+      const cycle = (t * 14 + i * 22) % 40
+      const sx = x + Math.sin(i * 2.4 + t * 0.7) * 16
+      const sy = y - 26 + cycle
+      ctx.globalAlpha = Math.max(0, 0.7 - cycle / 40)
+      ctx.fillStyle = '#e8f7ff'
+      // little 6-point flake
+      for (let k = 0; k < 3; k++) {
+        const a = (k / 3) * Math.PI
+        ctx.beginPath()
+        ctx.moveTo(sx - Math.cos(a) * 2.2, sy - Math.sin(a) * 2.2)
+        ctx.lineTo(sx + Math.cos(a) * 2.2, sy + Math.sin(a) * 2.2)
+        ctx.stroke()
+      }
+    }
+    ctx.strokeStyle = 'rgba(232,247,255,0.7)'
+    ctx.lineWidth = 1
+    ctx.globalAlpha = 1
+  } else if (el === 'water') {
+    // ripples expanding across the pedestal + droplets sliding off
+    for (let i = 0; i < 2; i++) {
+      const cycle = ((t * 0.6 + i * 0.5) % 1)
+      ctx.globalAlpha = 0.4 * (1 - cycle)
+      ctx.strokeStyle = '#8fd8ff'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.ellipse(x, y + 3, 8 + cycle * 18, 5 + cycle * 11, 0, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    for (let i = 0; i < 4; i++) {
+      const a = t * 1.5 + i * Math.PI / 2
+      const dx = x + Math.cos(a) * 19
+      const dy = y - 10 + Math.sin(a) * 9
+      ctx.globalAlpha = 0.6
+      ctx.fillStyle = '#bfe9ff'
+      ctx.beginPath()
+      ctx.arc(dx, dy + Math.sin(t * 3 + i) * 1.5, 1.6, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  } else if (el === 'lightning') {
+    // crackling arcs dancing around the obelisk
+    if (Math.random() < 0.3) {
+      const a = Math.random() * Math.PI * 2
+      const cx = x + Math.cos(a) * 15
+      const cy = y - 20 + Math.sin(a) * 12
+      ctx.strokeStyle = 'rgba(199,240,255,0.85)'
+      ctx.lineWidth = 1.2
+      ctx.beginPath()
+      ctx.moveTo(cx, cy - 6)
+      ctx.lineTo(cx + (Math.random() - 0.5) * 8, cy - 2)
+      ctx.lineTo(cx + (Math.random() - 0.5) * 10, cy + 3)
+      ctx.lineTo(cx + (Math.random() - 0.5) * 6, cy + 7)
+      ctx.stroke()
+    }
+    fakeGlow(ctx, x, y - 24, 18, 'rgba(199,240,255,0.35)', 0.18 + Math.random() * 0.1)
+  }
 }
 
 // Harpoon Turret — polished bronze swivel gun on a column mount.
@@ -733,7 +867,7 @@ function drawSpire(ctx, tower, scale, t) {
   fakeGlow(ctx, x, y - 4 * scale - h * 0.45, 16 * scale, 'rgba(199,240,255,0.6)', glow)
 }
 
-function drawLevelPips(ctx, tower) {
+function drawLevelPips(ctx, tower, t = 0) {
   const n = tower.level - 1
   if (n <= 0) return
   for (let i = 0; i < n; i++) {
@@ -904,9 +1038,12 @@ function drawEnemy(ctx, e, t) {
   }
 }
 
-// Generic fish: two-tone body, wagging tail, fluttering pectoral fin,
-// dorsal fin, gill line, glinting eye. Drawn facing +x.
+// Generic fish: volume-shaded body (lit top / shadowed belly), wagging tail,
+// fluttering pectoral fin, dorsal fin, gill line, glinting eye. Facing +x.
 function drawFish(ctx, size, body, belly, wag, t, id, fancy) {
+  // contact shadow drifting under the body
+  groundShadow(ctx, 0, size * 0.95, size * 0.85, size * 0.28, 0.18)
+
   // tail fin
   ctx.fillStyle = body
   ctx.beginPath()
@@ -932,16 +1069,18 @@ function drawFish(ctx, size, body, belly, wag, t, id, fancy) {
   ctx.closePath()
   ctx.fill()
 
-  // body
-  ctx.fillStyle = body
+  // body: volume gradient — light above, shade below
+  ctx.fillStyle = volGrad(ctx, 0, 0, size * 0.6, body)
   ctx.beginPath()
   ctx.ellipse(0, 0, size, size * 0.52, 0, 0, Math.PI * 2)
   ctx.fill()
   // belly
   ctx.fillStyle = belly
   ctx.beginPath()
-  ctx.ellipse(size * 0.05, size * 0.14, size * 0.7, size * 0.28, 0, 0, Math.PI * 2)
+  ctx.ellipse(size * 0.05, size * 0.16, size * 0.7, size * 0.26, 0, 0, Math.PI * 2)
   ctx.fill()
+  // top rim light
+  rimLight(ctx, 0, -size * 0.05, size * 0.9, size * 0.4, 'rgba(255,255,255,0.35)')
 
   if (fancy) {
     // scale shimmer
@@ -1035,6 +1174,7 @@ function drawShoal(ctx, wag, t, id) {
 
 // Armored turtle-brute: domed plated shell, rowing flippers, blinking eyes.
 function drawBrute(ctx, wag, t, id) {
+  groundShadow(ctx, 0, 9, 20, 8, 0.3)
   // flippers rowing
   ctx.fillStyle = '#4c683e'
   for (let i = 0; i < 4; i++) {
@@ -1059,11 +1199,12 @@ function drawBrute(ctx, wag, t, id) {
     ctx.closePath()
     ctx.fill()
   }
-  // dome
-  ctx.fillStyle = '#7a9a5f'
+  // dome: volume gradient — lit crown, shaded skirt
+  ctx.fillStyle = volGrad(ctx, 0, -4, 12, '#7a9a5f')
   ctx.beginPath()
   ctx.ellipse(0, -1, 12, 10, 0, 0, Math.PI * 2)
   ctx.fill()
+  rimLight(ctx, 0, -3, 11, 8.5, 'rgba(230,255,210,0.4)')
   // shell plates
   ctx.strokeStyle = 'rgba(45,62,38,0.7)'
   ctx.lineWidth = 1.2
@@ -1107,6 +1248,8 @@ function drawMaw(ctx, t, id) {
   const chomp = 0.25 + Math.abs(Math.sin(t * 2.2 + id)) * 0.45
   const lureSwing = Math.sin(t * 1.8 + id) * 3
 
+  groundShadow(ctx, 0, 16, 30, 11, 0.35)
+
   // aura
   ctx.globalAlpha = 0.2 + Math.sin(t * 3) * 0.08
   ctx.fillStyle = '#b84fd0'
@@ -1148,15 +1291,16 @@ function drawMaw(ctx, t, id) {
     ctx.restore()
   }
 
-  // body
-  ctx.fillStyle = '#6e2f86'
+  // body: volume-shaded hulk
+  ctx.fillStyle = volGrad(ctx, 0, -2, 17, '#6e2f86', 0.3)
   ctx.beginPath()
   ctx.ellipse(0, 0, 19, 15, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = '#8b3ea6'
+  ctx.fillStyle = shade('#8b3ea6', 0.1)
   ctx.beginPath()
   ctx.ellipse(-2, -3, 14, 9, 0, 0, Math.PI * 2)
   ctx.fill()
+  rimLight(ctx, -2, -5, 13, 8, 'rgba(230,200,255,0.45)')
   // skin speckles
   ctx.fillStyle = 'rgba(240,220,255,0.25)'
   for (let i = 0; i < 5; i++) {
