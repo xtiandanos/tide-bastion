@@ -145,6 +145,7 @@ function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
       break
     }
     case 'battery': {
+      const d = Math.hypot(target.x - tower.x, target.y - tower.y)
       g.projectiles.push({
         x: tower.x,
         y: tower.y,
@@ -153,6 +154,8 @@ function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
         ty: target.y,
         dmg: s.dmg,
         splash: 55,
+        t: 0,
+        flight: Math.max(0.2, d / PROJECTILE_SPEED), // total flight time, for arc
       })
       break
     }
@@ -192,6 +195,7 @@ export function updateProjectiles(g: Game, dt: number): void {
   const projectiles = g.projectiles
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i]
+    p.t += dt
     const target = p.targetId >= 0 ? g.enemies.find((e) => e.id === p.targetId) : null
     if (target && !target.dead) {
       p.tx = target.x

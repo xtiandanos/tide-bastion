@@ -242,6 +242,8 @@ export interface Projectile {
   ty: number
   dmg: number
   splash: number // splash radius, 0 = none
+  t: number // seconds in flight
+  flight: number // total flight time (drives the arc in art)
 }
 
 export interface Effect {
