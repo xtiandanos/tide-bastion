@@ -24,6 +24,8 @@ export function spawnEnemy(g: Game, kind: EnemyKind, dist = 0, hpOverride?: numb
     boss: !!t.boss,
     slowUntil: 0,
     slowFactor: 1,
+    wetUntil: 0,
+    stunUntil: 0,
     spawnTimer: t.spawner ? t.spawner.interval : 0,
     spawnsLeft: t.spawner ? t.spawner.count : 0,
     dead: false,
@@ -41,9 +43,14 @@ export function addEffect(g: Game, fx: Omit<Effect, 't0'>): void {
   g.effects.push({ ...fx, t0: g.t })
 }
 
-export function damageEnemy(g: Game, e: Enemy, dmg: number): void {
+// Elemental damage pipeline: armor piercing vs brutes, wet conductors take
+// extra lightning, ice tint hits, water drenches.
+export function damageEnemy(g: Game, e: Enemy, dmg: number, element?: string): void {
   if (e.dead) return
-  e.hp -= dmg
+  let d = dmg
+  if (element === 'physical' && e.kind === 'brute') d *= 1.25
+  if (element === 'lightning' && g.t < e.wetUntil) d *= 1.5
+  e.hp -= d
   if (e.hp <= 0) {
     e.dead = true
     g.gold += e.bounty
@@ -54,9 +61,21 @@ export function damageEnemy(g: Game, e: Enemy, dmg: number): void {
       y: e.y,
       r: e.radius + 6,
       life: 0.25,
-      color: '#ffe9a8',
+      color:
+        element === 'ice'
+          ? '#bfe9ff'
+          : element === 'lightning'
+            ? '#e6f0ff'
+            : element === 'water'
+              ? '#9fd8ff'
+              : '#ffe9a8',
     })
   }
+}
+
+// Soak an enemy: lightning conducts through it for 3s.
+export function wetEnemy(g: Game, e: Enemy, duration = 3): void {
+  if (g.t > e.wetUntil) e.wetUntil = g.t + duration
 }
 
 export function slowEnemy(g: Game, e: Enemy, factor: number, duration: number): void {
@@ -75,8 +94,9 @@ export function updateEnemies(g: Game, dt: number): void {
       continue
     }
 
+    const stunned = g.t < e.stunUntil
     const slowed = g.t < e.slowUntil
-    const factor = slowed ? e.slowFactor : 1
+    const factor = stunned ? 0 : slowed ? e.slowFactor : 1
     e.dist += e.speed * factor * dt
 
     // Shoal spawners drip fry behind them as they travel.

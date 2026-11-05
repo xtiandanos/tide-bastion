@@ -108,6 +108,38 @@
   color: var(--tb-danger);
 }
 
+.tb-speed[data-fast] {
+  border-color: var(--tb-gold);
+  color: var(--tb-gold);
+  font-weight: 700;
+  animation: tb-pulse 1s infinite;
+}
+
+/* elemental tags */
+
+.tb-el {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.tb-el-physical {
+  color: #dfe9ee;
+}
+
+.tb-el-ice {
+  color: #9fd8ff;
+}
+
+.tb-el-water {
+  color: #5fc4e8;
+}
+
+.tb-el-lightning {
+  color: #c7f0ff;
+  text-shadow: 0 0 6px rgba(199, 240, 255, 0.6);
+}
+
 /* build panel */
 
 .tb-panel {

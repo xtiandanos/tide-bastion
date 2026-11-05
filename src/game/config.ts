@@ -27,6 +27,8 @@ export const PROJECTILE_SPEED = 280
 
 export type TowerKind = 'harpoon' | 'frost' | 'battery' | 'spire'
 
+export type Element = 'physical' | 'ice' | 'water' | 'lightning'
+
 export interface TowerType {
   kind: TowerKind
   name: string
@@ -34,7 +36,15 @@ export interface TowerType {
   dmg: number
   range: number
   rate: number // shots per second
+  element: Element
   desc: string
+}
+
+export const ELEMENT_INFO: Record<Element, { label: string; icon: string }> = {
+  physical: { label: 'Physical', icon: '🔩' },
+  ice: { label: 'Ice', icon: '❄️' },
+  water: { label: 'Water', icon: '💧' },
+  lightning: { label: 'Lightning', icon: '⚡' },
 }
 
 export const TOWER_TYPES: Record<TowerKind, TowerType> = {
@@ -45,7 +55,8 @@ export const TOWER_TYPES: Record<TowerKind, TowerType> = {
     dmg: 12,
     range: 110,
     rate: 1.1,
-    desc: 'Cheap single-target workhorse',
+    element: 'physical',
+    desc: 'Pierces armor: ×1.25 damage vs Brutes',
   },
   frost: {
     kind: 'frost',
@@ -54,6 +65,7 @@ export const TOWER_TYPES: Record<TowerKind, TowerType> = {
     dmg: 4,
     range: 95,
     rate: 0.9,
+    element: 'ice',
     desc: 'Slows monsters 40% for 1.2s',
   },
   battery: {
@@ -63,7 +75,8 @@ export const TOWER_TYPES: Record<TowerKind, TowerType> = {
     dmg: 18,
     range: 100,
     rate: 0.55,
-    desc: 'Lobbed shell, splash damage',
+    element: 'water',
+    desc: 'Splash damage + soaks monsters WET',
   },
   spire: {
     kind: 'spire',
@@ -72,7 +85,8 @@ export const TOWER_TYPES: Record<TowerKind, TowerType> = {
     dmg: 30,
     range: 125,
     rate: 0.7,
-    desc: 'Chain lightning, 2 extra targets',
+    element: 'lightning',
+    desc: 'Chains ×2 · ×1.5 dmg vs WET · stuns',
   },
 }
 
@@ -97,8 +111,8 @@ export interface EnemyType {
 }
 
 export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
-  minnow: { kind: 'minnow', name: 'Minnow', hp: 30, speed: 60, bounty: 6, dmg: 1, radius: 9 },
-  dart: { kind: 'dart', name: 'Dart', hp: 18, speed: 110, bounty: 5, dmg: 1, radius: 7 },
+  minnow: { kind: 'minnow', name: 'Minnow', hp: 30, speed: 60, bounty: 6, dmg: 1, radius: 12 },
+  dart: { kind: 'dart', name: 'Dart', hp: 18, speed: 110, bounty: 5, dmg: 1, radius: 9 },
   shoal: {
     kind: 'shoal',
     name: 'Shoal Spawner',
@@ -106,11 +120,11 @@ export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
     speed: 70,
     bounty: 4,
     dmg: 1,
-    radius: 11,
+    radius: 14,
     spawner: { kind: 'fry', count: 5, interval: 2.2 },
   },
-  fry: { kind: 'fry', name: 'Fry', hp: 10, speed: 80, bounty: 2, dmg: 1, radius: 5 },
-  brute: { kind: 'brute', name: 'Brute', hp: 140, speed: 38, bounty: 14, dmg: 2, radius: 13 },
+  fry: { kind: 'fry', name: 'Fry', hp: 10, speed: 80, bounty: 2, dmg: 1, radius: 6.5 },
+  brute: { kind: 'brute', name: 'Brute', hp: 140, speed: 38, bounty: 14, dmg: 2, radius: 17 },
   maw: {
     kind: 'maw',
     name: 'The Maw',
@@ -118,7 +132,7 @@ export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
     speed: 30,
     bounty: 80,
     dmg: 6,
-    radius: 18,
+    radius: 24,
     boss: true,
   },
 }
@@ -136,17 +150,19 @@ export interface WaveGroup {
 export interface Wave {
   groups: WaveGroup[]
   bonus: number
+  hpMul: number // difficulty ramp: scales every enemy's hp this wave
 }
 
 export const WAVES: Wave[] = [
-  { groups: [{ type: 'minnow', count: 8, gap: 1.2, delay: 0 }], bonus: 30 },
-  { groups: [{ type: 'minnow', count: 12, gap: 0.9, delay: 0 }], bonus: 35 },
+  { groups: [{ type: 'minnow', count: 8, gap: 1.2, delay: 0 }], bonus: 30, hpMul: 1 },
+  { groups: [{ type: 'minnow', count: 12, gap: 0.9, delay: 0 }], bonus: 35, hpMul: 1.05 },
   {
     groups: [
       { type: 'dart', count: 10, gap: 0.7, delay: 0 },
       { type: 'minnow', count: 6, gap: 1.2, delay: 4 },
     ],
     bonus: 40,
+    hpMul: 1.1,
   },
   {
     groups: [
@@ -154,29 +170,33 @@ export const WAVES: Wave[] = [
       { type: 'minnow', count: 8, gap: 1, delay: 2 },
     ],
     bonus: 45,
+    hpMul: 1.2,
   },
   {
     groups: [
       { type: 'brute', count: 4, gap: 4, delay: 0 },
       { type: 'minnow', count: 10, gap: 0.8, delay: 1 },
-      { type: 'maw', count: 1, gap: 0, delay: 10, hp: 450 },
+      { type: 'maw', count: 1, gap: 0, delay: 10, hp: 500 },
     ],
     bonus: 60,
+    hpMul: 1.25,
   },
-  { groups: [{ type: 'dart', count: 16, gap: 0.5, delay: 0 }], bonus: 45 },
+  { groups: [{ type: 'dart', count: 16, gap: 0.5, delay: 0 }], bonus: 45, hpMul: 1.35 },
   {
     groups: [
       { type: 'brute', count: 8, gap: 2.5, delay: 0 },
       { type: 'shoal', count: 3, gap: 3, delay: 6 },
     ],
     bonus: 50,
+    hpMul: 1.4,
   },
   {
     groups: [
-      { type: 'maw', count: 2, gap: 8, delay: 0, hp: 700 },
+      { type: 'maw', count: 2, gap: 8, delay: 0, hp: 750 },
       { type: 'dart', count: 12, gap: 0.6, delay: 4 },
     ],
     bonus: 55,
+    hpMul: 1.45,
   },
   {
     groups: [
@@ -185,15 +205,17 @@ export const WAVES: Wave[] = [
       { type: 'dart', count: 10, gap: 0.5, delay: 8 },
     ],
     bonus: 60,
+    hpMul: 1.55,
   },
   {
     groups: [
-      { type: 'maw', count: 1, gap: 0, delay: 0, hp: 1200 },
+      { type: 'maw', count: 1, gap: 0, delay: 0, hp: 1400 },
       { type: 'brute', count: 8, gap: 3, delay: 6 },
       { type: 'dart', count: 14, gap: 0.5, delay: 12 },
       { type: 'minnow', count: 16, gap: 0.6, delay: 18 },
     ],
     bonus: 100,
+    hpMul: 1.7,
   },
 ]
 
@@ -229,6 +251,8 @@ export interface Enemy {
   boss: boolean
   slowUntil: number
   slowFactor: number // applied while g.t < slowUntil (e.g. 0.6 = 40% slow)
+  wetUntil: number // soaked: lightning damage ×1.5 while g.t < wetUntil
+  stunUntil: number // struck by lightning: stopped while g.t < stunUntil
   spawnTimer: number // shoal fry countdown
   spawnsLeft: number
   dead: boolean

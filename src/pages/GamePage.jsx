@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import GameCanvas from '../game/GameCanvas'
-import { TOWER_ORDER, TOWER_TYPES } from '../game/config'
+import { ELEMENT_INFO, TOWER_ORDER, TOWER_TYPES } from '../game/config'
 
 // Page-level component: owns phase + HUD state, renders the canvas,
 // the HUD strip, the build/upgrade panel and the phase screens.
@@ -17,6 +17,8 @@ export default function GamePage() {
     setSpeed(1)
     setPhase('playing')
   }
+
+  const cycleSpeed = () => setSpeed((s) => (s >= 5 ? 1 : s + 1))
 
   const placing = hud?.placing
   const sel = hud?.selected
@@ -52,8 +54,13 @@ export default function GamePage() {
             >
               {hud.waveActive ? `Surge ${hud.wave} incoming…` : 'Send Next Surge'}
             </button>
-            <button className="tb-btn" onClick={() => setSpeed((s) => (s === 1 ? 2 : 1))}>
-              {speed}× speed
+            <button
+              className="tb-btn tb-speed"
+              data-fast={speed >= 4 || undefined}
+              onClick={cycleSpeed}
+              title="Game speed — click to raise, up to 5×"
+            >
+              ⚡ {speed}×
             </button>
           </div>
         )}
@@ -75,6 +82,7 @@ export default function GamePage() {
             const t = TOWER_TYPES[kind]
             const active = placing === kind
             const afford = hud && hud.gold >= t.cost
+            const el = ELEMENT_INFO[t.element]
             return (
               <button
                 key={kind}
@@ -84,7 +92,9 @@ export default function GamePage() {
               >
                 <span className="tb-card-key">{i + 1}</span>
                 <strong>{t.name}</strong>
-                <span className="tb-card-cost">{t.cost}g</span>
+                <span className="tb-card-cost">
+                  {t.cost}g · <em className={`tb-el tb-el-${t.element}`}>{el.icon} {el.label}</em>
+                </span>
                 <small>{t.desc}</small>
               </button>
             )
@@ -92,7 +102,10 @@ export default function GamePage() {
           {sel && (
             <div className="tb-selected">
               <strong>
-                {TOWER_TYPES[sel.kind].name} · Lv{sel.level}
+                {TOWER_TYPES[sel.kind].name} · Lv{sel.level}{' '}
+                <em className={`tb-el tb-el-${TOWER_TYPES[sel.kind].element}`}>
+                  {ELEMENT_INFO[TOWER_TYPES[sel.kind].element].icon}
+                </em>
               </strong>
               <div className="tb-selected-actions">
                 {sel.upCost != null ? (

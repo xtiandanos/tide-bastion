@@ -9,7 +9,7 @@ import {
   TOWER_TYPES,
 } from './config'
 import { isBuildableTile, tileCenter } from './map'
-import { addEffect, damageEnemy, slowEnemy } from './enemies'
+import { addEffect, damageEnemy, slowEnemy, wetEnemy } from './enemies'
 
 export function upgradeCost(tower: Tower): number {
   return Math.round(TOWER_TYPES[tower.kind].cost * 0.9 * tower.level)
@@ -119,7 +119,8 @@ type Stats = ReturnType<typeof towerStats>
 function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
   switch (tower.kind) {
     case 'harpoon': {
-      damageEnemy(g, target, s.dmg)
+      // physical: pierces brute armor (handled in damageEnemy)
+      damageEnemy(g, target, s.dmg, 'physical')
       addEffect(g, {
         kind: 'harpoon',
         x: tower.x,
@@ -132,7 +133,7 @@ function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
       break
     }
     case 'frost': {
-      damageEnemy(g, target, s.dmg)
+      damageEnemy(g, target, s.dmg, 'ice')
       slowEnemy(g, target, 1 - s.slowPct, s.slowDur)
       addEffect(g, {
         kind: 'ring',
@@ -172,7 +173,9 @@ function chainLightning(g: Game, tower: Tower, primary: Enemy, dmg: number): voi
     [tower.x, tower.y],
     [primary.x, primary.y],
   ]
-  damageEnemy(g, primary, dmg)
+  // lightning: brief stun on the primary + wet-conduction bonus in damageEnemy
+  primary.stunUntil = g.t + 0.25
+  damageEnemy(g, primary, dmg, 'lightning')
 
   // Arc to the two nearest additional enemies within 90px of the primary.
   const near = g.enemies
@@ -185,7 +188,7 @@ function chainLightning(g: Game, tower: Tower, primary: Enemy, dmg: number): voi
   for (const { e } of near) {
     hitIds.add(e.id)
     pts.push([e.x, e.y])
-    damageEnemy(g, e, dmg * 0.6)
+    damageEnemy(g, e, dmg * 0.6, 'lightning')
   }
 
   addEffect(g, { kind: 'bolt', x: tower.x, y: tower.y, pts, life: 0.18, color: '#c7f0ff' })
@@ -208,14 +211,15 @@ export function updateProjectiles(g: Game, dt: number): void {
     const d = Math.hypot(dx, dy)
     const step = PROJECTILE_SPEED * dt
     if (d <= step) {
-      // Impact: splash damages everything within radius (flat).
+      // Impact: water splash — damages and SOAKS everything in radius.
       if (p.splash > 0) {
         for (const e of g.enemies) {
           if (!e.dead && Math.hypot(e.x - p.tx, e.y - p.ty) <= p.splash) {
-            damageEnemy(g, e, p.dmg)
+            damageEnemy(g, e, p.dmg, 'water')
+            wetEnemy(g, e, 3)
           }
         }
-        addEffect(g, { kind: 'boom', x: p.tx, y: p.ty, r: p.splash, life: 0.35, color: '#ffd28a' })
+        addEffect(g, { kind: 'boom', x: p.tx, y: p.ty, r: p.splash, life: 0.35, color: '#8fd8ff' })
       }
       projectiles.splice(i, 1)
       continue

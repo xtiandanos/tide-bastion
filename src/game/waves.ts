@@ -1,7 +1,7 @@
 // waves.ts — the surge spawner: schedules, wave-clear detection, bonuses.
 
 import type { Game } from './engine'
-import { WAVES } from './config'
+import { ENEMY_TYPES, WAVES } from './config'
 import { spawnEnemy } from './enemies'
 
 interface SpawnEntry {
@@ -24,8 +24,11 @@ export function startWave(g: Game): boolean {
   const wave = WAVES[g.wave]
   const schedule: SpawnEntry[] = []
   for (const group of wave.groups) {
+    // difficulty ramp: per-wave hpMul scales every spawn unless the group
+    // pins its own hp (bosses do, so their fights stay tuned)
+    const hp = group.hp ?? Math.round(ENEMY_TYPES[group.type].hp * wave.hpMul)
     for (let i = 0; i < group.count; i++) {
-      schedule.push({ kind: group.type, time: group.delay + i * group.gap, hp: group.hp })
+      schedule.push({ kind: group.type, time: group.delay + i * group.gap, hp })
     }
   }
   schedule.sort((a, b) => a.time - b.time)

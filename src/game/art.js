@@ -356,27 +356,49 @@ function drawHeart(ctx, t, lives) {
 }
 
 // ---------------------------------------------------------------- towers
+// Design language: every tower sits on an ornate stone pedestal with a gold
+// rim; materials are polished bronze, pale ice, brass and arcane crystal.
+
+const GOLD = '#e8c877'
+const GOLD_DARK = '#a8873e'
 
 function drawTower(ctx, tower, t) {
-  const { x, y, kind, level, fireFlash } = tower
-  const scale = 1 + (level - 1) * 0.08
+  const { x, y, kind, level } = tower
+  const scale = 1.12 + (level - 1) * 0.09
 
-  // base pad + plank ring
+  // ornate pedestal: shadow → dark ring → stone → gold rim → spokes
   ctx.save()
   ctx.translate(x, y)
-  ctx.fillStyle = 'rgba(8,24,32,0.5)'
+  ctx.fillStyle = 'rgba(6,20,28,0.55)'
   ctx.beginPath()
-  ctx.ellipse(0, 4, 16 * scale, 11 * scale, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, 5, 18 * scale, 12 * scale, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#1d3d4c'
+  ctx.beginPath()
+  ctx.ellipse(0, 3, 17 * scale, 12 * scale, 0, 0, Math.PI * 2)
   ctx.fill()
   ctx.fillStyle = '#2e5261'
   ctx.beginPath()
-  ctx.ellipse(0, 1, 15 * scale, 12 * scale, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, 1, 16 * scale, 11 * scale, 0, 0, Math.PI * 2)
   ctx.fill()
-  ctx.strokeStyle = 'rgba(10,26,34,0.55)'
+  ctx.fillStyle = '#3d6878'
+  ctx.beginPath()
+  ctx.ellipse(0, -1, 14 * scale, 9.5 * scale, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // gold rim
+  ctx.strokeStyle = GOLD
+  ctx.lineWidth = 1.3
+  ctx.beginPath()
+  ctx.ellipse(0, -1, 14 * scale, 9.5 * scale, 0, 0, Math.PI * 2)
+  ctx.stroke()
+  // radial spokes
+  ctx.strokeStyle = 'rgba(10,26,34,0.5)'
   ctx.lineWidth = 1
-  for (let i = -1; i <= 1; i++) {
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI + Math.PI
     ctx.beginPath()
-    ctx.ellipse(0, i * 5, 14 * scale, 3.4, 0, 0, Math.PI * 2)
+    ctx.moveTo(0, -1)
+    ctx.lineTo(Math.cos(a) * 13 * scale, -1 + Math.sin(a) * 9 * scale)
     ctx.stroke()
   }
   ctx.restore()
@@ -389,142 +411,230 @@ function drawTower(ctx, tower, t) {
   drawLevelPips(ctx, tower)
 }
 
+// Harpoon Turret — polished bronze swivel gun on a column mount.
 function drawHarpoon(ctx, tower, scale, t) {
-  const recoil = Math.max(0, 1 - tower.fireFlash * 10) // 1 → 0 just after firing
-  ctx.save()
-  ctx.translate(tower.x, tower.y)
-  ctx.rotate(tower.angle)
-  ctx.translate(-recoil * 3, 0)
+  const recoil = Math.max(0, 1 - tower.fireFlash * 10)
+  const { x, y } = tower
 
-  // yoke
-  ctx.fillStyle = '#7fa6b8'
+  // column mount
+  ctx.fillStyle = '#23434f'
   ctx.beginPath()
-  ctx.roundRect(-6 * scale, -6 * scale, 12 * scale, 12 * scale, 2)
+  ctx.roundRect(x - 5 * scale, y - 8 * scale, 10 * scale, 12 * scale, 3)
   ctx.fill()
-  // barrel
-  ctx.fillStyle = '#9cc0d0'
-  ctx.fillRect(2, -2.4 * scale, 10 * scale, 4.8 * scale)
-  // harpoon shaft + barbs
+  ctx.fillStyle = '#33596a'
+  ctx.beginPath()
+  ctx.roundRect(x - 4 * scale, y - 8 * scale, 8 * scale, 4 * scale, 2)
+  ctx.fill()
+
+  ctx.save()
+  ctx.translate(x, y - 8 * scale)
+  ctx.rotate(tower.angle)
+  ctx.translate(-recoil * 3.5, 0)
+
+  // curved yoke arms
+  ctx.strokeStyle = '#8d6b3f'
+  ctx.lineWidth = 2.4 * scale
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.arc(4 * scale, 0, 6.5 * scale, -Math.PI * 0.62, Math.PI * 0.62)
+  ctx.stroke()
+  // gun body: two-tone bronze, dark under / light over
+  ctx.fillStyle = '#7a5c34'
+  ctx.beginPath()
+  ctx.roundRect(-4 * scale, -3.4 * scale, 11 * scale, 6.8 * scale, 2.5)
+  ctx.fill()
+  ctx.fillStyle = '#9c7845'
+  ctx.beginPath()
+  ctx.roundRect(-4 * scale, -3.4 * scale, 11 * scale, 3.4 * scale, 2)
+  ctx.fill()
+  // barrel: slender steel with shine
+  ctx.fillStyle = '#3e4a52'
+  ctx.fillRect(6 * scale, -1.9 * scale, 10 * scale, 3.8 * scale)
+  ctx.fillStyle = '#6b7d87'
+  ctx.fillRect(6 * scale, -1.9 * scale, 10 * scale, 1.5 * scale)
+  // gold muzzle ring
+  ctx.fillStyle = GOLD
+  ctx.fillRect(14.5 * scale, -2.4 * scale, 2 * scale, 4.8 * scale)
+  // elegant spear: slim shaft, swept barbs, needle tip
   ctx.strokeStyle = '#dfe9ee'
-  ctx.lineWidth = 2 * scale
+  ctx.lineWidth = 1.7 * scale
   ctx.beginPath()
-  ctx.moveTo(8, 0)
-  ctx.lineTo(19 * scale, 0)
+  ctx.moveTo(15 * scale, 0)
+  ctx.lineTo(24 * scale, 0)
   ctx.stroke()
   ctx.beginPath()
-  ctx.moveTo(19 * scale, 0)
-  ctx.lineTo(14 * scale, -3.4 * scale)
-  ctx.moveTo(19 * scale, 0)
-  ctx.lineTo(14 * scale, 3.4 * scale)
+  ctx.moveTo(24 * scale, 0)
+  ctx.quadraticCurveTo(20.5 * scale, -3.2 * scale, 17 * scale, -2.6 * scale)
+  ctx.moveTo(24 * scale, 0)
+  ctx.quadraticCurveTo(20.5 * scale, 3.2 * scale, 17 * scale, 2.6 * scale)
   ctx.stroke()
-  // line back to turret
-  ctx.strokeStyle = 'rgba(223,233,238,0.4)'
+  ctx.fillStyle = '#f4f8fa'
+  ctx.beginPath()
+  ctx.moveTo(24 * scale, 0)
+  ctx.lineTo(29 * scale, 0)
+  ctx.lineTo(24 * scale, -1.4 * scale)
+  ctx.lineTo(24 * scale, 1.4 * scale)
+  ctx.closePath()
+  ctx.fill()
+  // tension line trailing back
+  ctx.strokeStyle = 'rgba(223,233,238,0.35)'
   ctx.lineWidth = 0.8
   ctx.beginPath()
-  ctx.moveTo(19 * scale, 0)
-  ctx.quadraticCurveTo(8 * scale, Math.sin(t * 3) * 4, -8, 5)
+  ctx.moveTo(16 * scale, 0)
+  ctx.quadraticCurveTo(6 * scale, 9 + Math.sin(t * 2.4) * 3, -9, 8)
   ctx.stroke()
   ctx.restore()
 
-  if (tower.fireFlash < 0.1) fakeGlow(ctx, tower.x, tower.y, 19 * scale, 'rgba(223,233,238,0.35)')
+  if (tower.fireFlash < 0.1) fakeGlow(ctx, x, y - 8 * scale, 20 * scale, 'rgba(255,240,210,0.4)')
 }
 
+// Frost Coral — pale ice crystal grove: faceted main crystal, curving
+// frosted branches with diamond tips, slow-orbiting ice shards.
 function drawFrost(ctx, tower, scale, t) {
   const { x, y } = tower
   const sway = t * 1.1
-  // rock base
-  ctx.fillStyle = '#36586a'
+
+  // central faceted ice crystal
+  const ch = 15 * scale
+  const lean = Math.sin(t * 0.9) * 0.06
+  ctx.save()
+  ctx.translate(x, y - 2)
+  ctx.rotate(lean)
+  ctx.fillStyle = '#9cc9e8'
   ctx.beginPath()
-  ctx.ellipse(x, y + 4, 10 * scale, 6 * scale, 0, 0, Math.PI * 2)
+  ctx.moveTo(0, -ch)
+  ctx.lineTo(5 * scale, -2)
+  ctx.lineTo(0, 3)
+  ctx.lineTo(-5 * scale, -2)
+  ctx.closePath()
   ctx.fill()
-  // coral branches with sub-branches, swaying
+  ctx.fillStyle = '#d6efff'
+  ctx.beginPath()
+  ctx.moveTo(0, -ch)
+  ctx.lineTo(2.4 * scale, -2)
+  ctx.lineTo(0, 2)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+
+  // curving branches with diamond tips
   ctx.strokeStyle = '#7fc4e8'
   ctx.lineCap = 'round'
   for (let i = 0; i < 5; i++) {
-    const a = -Math.PI / 2 + (i - 2) * 0.42
-    const len = (10 + rnd(i * 9) * 4) * scale
+    if (i === 2) continue // center occupied by the crystal
+    const a = -Math.PI / 2 + (i - 2) * 0.48
+    const len = (9 + rnd(i * 9) * 4) * scale
+    const swayA = a + Math.sin(sway + i * 1.3) * 0.14
     const midX = x + Math.cos(a + Math.sin(sway + i) * 0.06) * len * 0.5
     const midY = y + Math.sin(a + Math.sin(sway + i) * 0.06) * len * 0.5
-    const tipX = x + Math.cos(a + Math.sin(sway + i * 1.3) * 0.14) * len
-    const tipY = y + Math.sin(a + Math.sin(sway + i * 1.3) * 0.14) * len
-    ctx.lineWidth = 3 * scale
+    const tipX = x + Math.cos(swayA) * len
+    const tipY = y + Math.sin(swayA) * len
+    ctx.lineWidth = 2.6 * scale
     ctx.beginPath()
-    ctx.moveTo(x, y + 2)
+    ctx.moveTo(x, y)
     ctx.quadraticCurveTo(midX, midY, tipX, tipY)
     ctx.stroke()
-    // sub-branch
-    ctx.lineWidth = 1.8 * scale
+    // diamond crystal tip
+    const tw = 2.6 * scale
+    ctx.fillStyle = '#c6ecff'
     ctx.beginPath()
-    ctx.moveTo(midX, midY)
-    ctx.lineTo(midX + Math.cos(a - 0.7) * len * 0.4, midY + Math.sin(a - 0.7) * len * 0.4)
-    ctx.stroke()
-    // tip bulb
-    ctx.fillStyle = '#aadcff'
-    ctx.beginPath()
-    ctx.arc(tipX, tipY, 1.6 * scale, 0, Math.PI * 2)
+    ctx.moveTo(tipX, tipY - tw * 1.6)
+    ctx.lineTo(tipX + tw, tipY)
+    ctx.lineTo(tipX, tipY + tw * 1.2)
+    ctx.lineTo(tipX - tw, tipY)
+    ctx.closePath()
     ctx.fill()
   }
-  // polyps: tiny glowing dots pulsing on the branches
-  for (let i = 0; i < 4; i++) {
-    const a = -Math.PI / 2 + (i - 1.5) * 0.42
-    const d = (4 + rnd(i * 5) * 5) * scale
-    const px = x + Math.cos(a) * d
-    const py = y + Math.sin(a) * d
-    ctx.globalAlpha = 0.5 + Math.sin(t * 2.2 + i * 1.8) * 0.4
-    ctx.fillStyle = '#d6f2ff'
+
+  // orbiting ice shards
+  for (let i = 0; i < 3; i++) {
+    const a = t * 0.9 + (i / 3) * Math.PI * 2
+    const sx = x + Math.cos(a) * 13 * scale
+    const sy = y - 8 * scale + Math.sin(a) * 6 * scale
+    ctx.globalAlpha = 0.65 + Math.sin(t * 3 + i * 2) * 0.25
+    ctx.fillStyle = '#e8f7ff'
     ctx.beginPath()
-    ctx.arc(px, py, 1.2 * scale, 0, Math.PI * 2)
+    ctx.moveTo(sx, sy - 3)
+    ctx.lineTo(sx + 1.8, sy)
+    ctx.lineTo(sx, sy + 3)
+    ctx.lineTo(sx - 1.8, sy)
+    ctx.closePath()
     ctx.fill()
   }
   ctx.globalAlpha = 1
-  const glow = tower.fireFlash < 0.25 ? 0.45 : 0.14
-  fakeGlow(ctx, x, y, 15 * scale, 'rgba(159,216,255,0.5)', glow)
-  // idle bubbles
-  if (Math.sin(t * 1.3 + tower.id) > 0.94) {
-    const by = y - 16 - ((t * 12) % 14)
-    ctx.strokeStyle = 'rgba(200,240,250,0.4)'
-    ctx.beginPath()
-    ctx.arc(x + 3, by, 1.6, 0, Math.PI * 2)
-    ctx.stroke()
-  }
+
+  const glow = tower.fireFlash < 0.25 ? 0.45 : 0.13 + Math.sin(t * 1.8) * 0.04
+  fakeGlow(ctx, x, y - 7 * scale, 16 * scale, 'rgba(159,216,255,0.5)', glow)
 }
 
+// Tide Battery — heavy brass mortar on a dark-wood carriage with brass inlay.
 function drawBattery(ctx, tower, scale, t) {
   const recoil = Math.max(0, 1 - tower.fireFlash * 8)
+  const { x, y } = tower
+
   ctx.save()
-  ctx.translate(tower.x, tower.y)
+  ctx.translate(x, y - 2)
   ctx.rotate(tower.angle)
   ctx.translate(-recoil * 4, 0)
-  // carriage
-  ctx.fillStyle = '#8a6f42'
+
+  // carriage: dark wood wedge with brass inlay stripe
+  ctx.fillStyle = '#4a3a26'
   ctx.beginPath()
-  ctx.roundRect(-8 * scale, -5 * scale, 10 * scale, 10 * scale, 2)
+  ctx.moveTo(-9 * scale, 6 * scale)
+  ctx.lineTo(-6 * scale, -6 * scale)
+  ctx.lineTo(2 * scale, -6 * scale)
+  ctx.lineTo(4 * scale, 6 * scale)
+  ctx.closePath()
   ctx.fill()
-  // tube
-  ctx.fillStyle = '#c9a86a'
-  ctx.beginPath()
-  ctx.roundRect(0, -5.5 * scale, 15 * scale, 11 * scale, 3)
-  ctx.fill()
-  // muzzle ring
-  ctx.fillStyle = '#a98c55'
-  ctx.fillRect(13 * scale, -6 * scale, 3 * scale, 12 * scale)
-  // band details
-  ctx.strokeStyle = 'rgba(70,50,25,0.6)'
+  ctx.strokeStyle = GOLD_DARK
   ctx.lineWidth = 1
-  for (let i = 1; i < 3; i++) {
+  ctx.beginPath()
+  ctx.moveTo(-8 * scale, 4 * scale)
+  ctx.lineTo(3 * scale, 4 * scale)
+  ctx.stroke()
+
+  // barrel: fat brass tube, breech ring, wide muzzle
+  ctx.fillStyle = '#8f7340'
+  ctx.beginPath()
+  ctx.roundRect(-3 * scale, -6 * scale, 16 * scale, 12 * scale, 4)
+  ctx.fill()
+  ctx.fillStyle = '#b5955c'
+  ctx.beginPath()
+  ctx.roundRect(-3 * scale, -6 * scale, 16 * scale, 5.5 * scale, 3)
+  ctx.fill()
+  // gold bands
+  ctx.fillStyle = GOLD
+  ctx.fillRect(0, -6.4 * scale, 1.8 * scale, 12.8 * scale)
+  ctx.fillRect(6 * scale, -6.4 * scale, 1.8 * scale, 12.8 * scale)
+  // wide muzzle with dark bore
+  ctx.fillStyle = '#d4b477'
+  ctx.beginPath()
+  ctx.roundRect(12.5 * scale, -7 * scale, 3.5 * scale, 14 * scale, 2)
+  ctx.fill()
+  ctx.fillStyle = '#2a2013'
+  ctx.beginPath()
+  ctx.ellipse(14.5 * scale, 0, 1.6 * scale, 5.2 * scale, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // rivets
+  ctx.fillStyle = GOLD_DARK
+  for (let i = 0; i < 3; i++) {
     ctx.beginPath()
-    ctx.moveTo(i * 4.5 * scale, -5 * scale)
-    ctx.lineTo(i * 4.5 * scale, 5 * scale)
-    ctx.stroke()
+    ctx.arc(2 + i * 5 * scale, 5.6 * scale, 0.8, 0, Math.PI * 2)
+    ctx.fill()
   }
   ctx.restore()
 
-  // muzzle smoke just after firing
+  // muzzle flash + smoke just after firing
   if (tower.fireFlash < 0.4) {
     const age = tower.fireFlash / 0.4
+    if (age < 0.3) {
+      const fx = x + Math.cos(tower.angle) * 17 * scale
+      const fy = y - 2 + Math.sin(tower.angle) * 17 * scale
+      fakeGlow(ctx, fx, fy, 10 * scale, 'rgba(255,230,160,0.5)', 0.7 * (1 - age / 0.3))
+    }
     for (let i = 0; i < 3; i++) {
-      const px = tower.x + Math.cos(tower.angle) * (16 + i * 4 + age * 10)
-      const py = tower.y + Math.sin(tower.angle) * (16 + i * 4 + age * 10) + Math.sin(t * 6 + i) * 2 - age * 6
+      const px = x + Math.cos(tower.angle) * (18 + i * 4 + age * 10)
+      const py = y - 2 + Math.sin(tower.angle) * (18 + i * 4 + age * 10) + Math.sin(t * 6 + i) * 2 - age * 6
       ctx.globalAlpha = 0.3 * (1 - age)
       ctx.fillStyle = '#dfe9ee'
       ctx.beginPath()
@@ -535,78 +645,111 @@ function drawBattery(ctx, tower, scale, t) {
   }
 }
 
+// Storm Spire — arcane crystal obelisk floating over a gold collar,
+// ringed by three orbiting shards.
 function drawSpire(ctx, tower, scale, t) {
   const { x, y } = tower
-  const h = 24 * scale
-  // main crystal
-  ctx.fillStyle = '#5c6cd0'
+  const h = 27 * scale
+  const bob = Math.sin(t * 1.5) * 1.5
+
+  // gold collar on the pedestal
+  ctx.fillStyle = GOLD_DARK
   ctx.beginPath()
-  ctx.moveTo(x, y - h)
-  ctx.lineTo(x + 9 * scale, y - 2)
-  ctx.lineTo(x, y + 3)
-  ctx.lineTo(x - 9 * scale, y - 2)
+  ctx.ellipse(x, y - 1, 8 * scale, 4 * scale, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = GOLD
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.ellipse(x, y - 1.6, 8 * scale, 3.6 * scale, 0, 0, Math.PI * 2)
+  ctx.stroke()
+
+  ctx.save()
+  ctx.translate(x, y - 4 * scale + bob)
+
+  // main obelisk: 3 visible facets
+  ctx.fillStyle = '#4d5cc4'
+  ctx.beginPath()
+  ctx.moveTo(0, -h)
+  ctx.lineTo(9 * scale, -h * 0.25)
+  ctx.lineTo(0, 0)
+  ctx.lineTo(-9 * scale, -h * 0.25)
   ctx.closePath()
   ctx.fill()
-  ctx.fillStyle = '#9aa8ff'
+  ctx.fillStyle = '#8290ec'
   ctx.beginPath()
-  ctx.moveTo(x, y - h)
-  ctx.lineTo(x + 4.5 * scale, y - 2)
-  ctx.lineTo(x, y + 1)
+  ctx.moveTo(0, -h)
+  ctx.lineTo(9 * scale, -h * 0.25)
+  ctx.lineTo(3 * scale, -h * 0.1)
+  ctx.lineTo(0, 0)
   ctx.closePath()
   ctx.fill()
-  // side shards
-  ctx.fillStyle = '#7484e0'
+  ctx.fillStyle = '#c9d4ff'
   ctx.beginPath()
-  ctx.moveTo(x - 10 * scale, y + 2)
-  ctx.lineTo(x - 6 * scale, y - h * 0.45)
-  ctx.lineTo(x - 3 * scale, y + 2)
+  ctx.moveTo(0, -h)
+  ctx.lineTo(3 * scale, -h * 0.5)
+  ctx.lineTo(1.5 * scale, -h * 0.12)
+  ctx.lineTo(0, 0)
   ctx.closePath()
   ctx.fill()
-  ctx.beginPath()
-  ctx.moveTo(x + 4 * scale, y + 2)
-  ctx.lineTo(x + 8 * scale, y - h * 0.35)
-  ctx.lineTo(x + 11 * scale, y + 2)
-  ctx.closePath()
-  ctx.fill()
-  // inner pulse
-  ctx.globalAlpha = 0.4 + Math.sin(t * 2.6) * 0.25
-  ctx.fillStyle = '#dfe8ff'
-  ctx.beginPath()
-  ctx.moveTo(x, y - h * 0.8)
-  ctx.lineTo(x + 2 * scale, y - 4)
-  ctx.lineTo(x, y - 2)
-  ctx.lineTo(x - 2 * scale, y - 4)
-  ctx.closePath()
-  ctx.fill()
-  ctx.globalAlpha = 1
-  // orbiting motes
-  for (let i = 0; i < 3; i++) {
-    const a = t * 2 + (i / 3) * Math.PI * 2
-    const mx = x + Math.cos(a) * (11 * scale)
-    const my = y - h * 0.5 + Math.sin(a) * (7 * scale)
-    ctx.globalAlpha = 0.5 + Math.sin(t * 4 + i * 2) * 0.35
-    ctx.fillStyle = '#c7f0ff'
+
+  // inner lightning flicker
+  if (Math.sin(t * 7 + tower.id) > 0.55) {
+    ctx.globalAlpha = 0.5
+    ctx.strokeStyle = '#e6f0ff'
+    ctx.lineWidth = 1
     ctx.beginPath()
-    ctx.arc(mx, my, 1.4, 0, Math.PI * 2)
+    ctx.moveTo(0, -h * 0.85)
+    ctx.lineTo(1.5 * scale, -h * 0.6)
+    ctx.lineTo(-1.5 * scale, -h * 0.35)
+    ctx.lineTo(1 * scale, -h * 0.15)
+    ctx.stroke()
+    ctx.globalAlpha = 1
+  }
+
+  // orbiting shards ring
+  for (let i = 0; i < 3; i++) {
+    const a = t * 1.4 + (i / 3) * Math.PI * 2
+    const mx = Math.cos(a) * 13 * scale
+    const my = -h * 0.4 + Math.sin(a) * 8 * scale
+    ctx.fillStyle = '#aebcff'
+    ctx.beginPath()
+    ctx.moveTo(mx, my - 4)
+    ctx.lineTo(mx + 2.2, my)
+    ctx.lineTo(mx, my + 4)
+    ctx.lineTo(mx - 2.2, my)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.beginPath()
+    ctx.moveTo(mx, my - 4)
+    ctx.lineTo(mx + 2.2, my)
+    ctx.lineTo(mx, my)
+    ctx.closePath()
     ctx.fill()
   }
-  ctx.globalAlpha = 1
-  const glow = tower.fireFlash < 0.2 ? 0.5 : 0.16 + Math.sin(t * 2.4) * 0.06
-  fakeGlow(ctx, x, y - h * 0.45, 15 * scale, 'rgba(199,240,255,0.6)', glow)
+  ctx.restore()
+
+  const glow = tower.fireFlash < 0.2 ? 0.5 : 0.15 + Math.sin(t * 2.4) * 0.06
+  fakeGlow(ctx, x, y - 4 * scale - h * 0.45, 16 * scale, 'rgba(199,240,255,0.6)', glow)
 }
 
 function drawLevelPips(ctx, tower) {
   const n = tower.level - 1
   if (n <= 0) return
   for (let i = 0; i < n; i++) {
-    ctx.fillStyle = '#ffd76b'
+    const px = tower.x - 6 + i * 12
+    const py = tower.y + 20
+    ctx.globalAlpha = 0.5 + Math.sin(t * 3 + i * 2) * 0.3
+    fakeGlow(ctx, px, py, 4, 'rgba(255,215,107,0.4)')
+    ctx.fillStyle = GOLD
     ctx.beginPath()
-    ctx.arc(tower.x - 5 + i * 10, tower.y + 19, 2.5, 0, Math.PI * 2)
+    ctx.arc(px, py, 2.4, 0, Math.PI * 2)
     ctx.fill()
-    ctx.strokeStyle = 'rgba(90,60,10,0.6)'
+    ctx.strokeStyle = GOLD_DARK
     ctx.lineWidth = 0.8
     ctx.stroke()
   }
+  ctx.globalAlpha = 1
 }
 
 // ---------------------------------------------------------------- ghost / placement
@@ -663,14 +806,18 @@ function drawGhost(ctx, g, t) {
 function drawEnemy(ctx, e, t) {
   const heading = pointAt(e.dist).angle
   const wag = Math.sin(t * 10 + e.id * 2)
+  // scale art with the configured radius (old art was built for these bases)
+  const BASE = { minnow: 9, dart: 7, shoal: 11, fry: 5, brute: 13, maw: 18 }
+  const s = e.radius / (BASE[e.kind] || 9)
 
   ctx.save()
   ctx.translate(e.x, e.y)
   ctx.rotate(heading)
+  ctx.scale(s, s)
 
   switch (e.kind) {
     case 'minnow':
-      drawFish(ctx, 10, '#8fd0c2', '#5fa899', wag, t, e.id, false)
+      drawFish(ctx, 10, '#8fd0c2', '#5fa899', wag, t, e.id, true)
       break
     case 'fry':
       drawFish(ctx, 6, '#a9d6c8', '#7cb3a4', wag * 1.3, t, e.id, false)
@@ -690,20 +837,52 @@ function drawEnemy(ctx, e, t) {
   }
   ctx.restore()
 
-  // slow indicator: frosty sheen
+  // slow indicator: frosty sheen + orbiting crystals
   if (e.slowUntil > t) {
-    ctx.globalAlpha = 0.35 + Math.sin(t * 8) * 0.1
+    ctx.globalAlpha = 0.3 + Math.sin(t * 8) * 0.1
     ctx.fillStyle = '#9fd8ff'
     ctx.beginPath()
-    ctx.arc(e.x, e.y, e.radius + 4, 0, Math.PI * 2)
+    ctx.arc(e.x, e.y, e.radius + 5, 0, Math.PI * 2)
     ctx.fill()
-    // tiny crystals
     ctx.globalAlpha = 0.7
     ctx.fillStyle = '#e6f7ff'
     for (let i = 0; i < 3; i++) {
       const a = t * 2 + (i / 3) * Math.PI * 2
       ctx.beginPath()
-      ctx.arc(e.x + Math.cos(a) * (e.radius + 2), e.y + Math.sin(a) * (e.radius + 2), 1.3, 0, Math.PI * 2)
+      ctx.arc(e.x + Math.cos(a) * (e.radius + 3), e.y + Math.sin(a) * (e.radius + 3), 1.6, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
+  // wet indicator: glossy droplets (amplifies lightning damage)
+  if (e.wetUntil > t) {
+    ctx.globalAlpha = 0.45
+    ctx.fillStyle = '#3aa6d8'
+    ctx.beginPath()
+    ctx.arc(e.x, e.y, e.radius + 3, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 0.8
+    ctx.fillStyle = '#bfe9ff'
+    for (let i = 0; i < 2; i++) {
+      const wob = Math.sin(t * 6 + i * 3 + e.id) * 2
+      ctx.beginPath()
+      ctx.arc(e.x + wob, e.y - e.radius - 2 + i * 4, 1.4, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
+  // stunned: dizzy sparks
+  if (e.stunUntil > t) {
+    ctx.fillStyle = '#fff2a8'
+    for (let i = 0; i < 3; i++) {
+      const a = t * 7 + (i / 3) * Math.PI * 2
+      const sx = e.x + Math.cos(a) * (e.radius + 5)
+      const sy = e.y - e.radius - 4 + Math.sin(a) * 3
+      ctx.globalAlpha = 0.8
+      ctx.beginPath()
+      ctx.arc(sx, sy, 1.5, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.globalAlpha = 1
@@ -711,7 +890,7 @@ function drawEnemy(ctx, e, t) {
 
   // hp bar when damaged
   if (e.hp < e.maxHp) {
-    const w = e.boss ? 40 : 22
+    const w = e.boss ? 48 : 26
     const frac = Math.max(0, e.hp / e.maxHp)
     const by = e.y - e.radius - 10
     ctx.fillStyle = 'rgba(8,20,28,0.75)'
@@ -816,6 +995,13 @@ function drawDart(ctx, wag, t, id) {
     ctx.lineTo(-26 - i * 6, -2 + i * 3)
     ctx.stroke()
   }
+  // swept crest fin — cuts through water
+  ctx.fillStyle = '#e8a94a'
+  ctx.beginPath()
+  ctx.moveTo(-2, -3)
+  ctx.quadraticCurveTo(4, -11, 8, -4)
+  ctx.closePath()
+  ctx.fill()
   drawFish(ctx, 8.5, '#ffd76b', '#e8a94a', wag * 0.7, t, id, false)
 }
 
@@ -891,11 +1077,20 @@ function drawBrute(ctx, wag, t, id) {
     ctx.lineTo(Math.cos(a) * 11.5, -1 + Math.sin(a) * 9.5)
     ctx.stroke()
   }
-  // head bump + eyes that blink
+  // head bump + horn crest + eyes that blink
   ctx.fillStyle = '#5a7a4a'
   ctx.beginPath()
   ctx.ellipse(13, 0, 5.5, 4.5, 0, 0, Math.PI * 2)
   ctx.fill()
+  ctx.fillStyle = '#d8cf9a'
+  for (const hy of [-3.5, 0, 3.5]) {
+    ctx.beginPath()
+    ctx.moveTo(15, hy - 1.5)
+    ctx.lineTo(21, hy)
+    ctx.lineTo(15, hy + 1.5)
+    ctx.closePath()
+    ctx.fill()
+  }
   const blink = Math.sin(t * 0.9 + id * 3) > 0.96 ? 0.15 : 1
   ctx.fillStyle = '#1d2b1a'
   ctx.beginPath()
@@ -938,6 +1133,19 @@ function drawMaw(ctx, t, id) {
     ctx.lineTo(sx + 2.5, -9)
     ctx.closePath()
     ctx.fill()
+  }
+
+  // side fins, slowly rowing
+  ctx.fillStyle = '#4a2060'
+  for (const side of [-1, 1]) {
+    const flap = Math.sin(t * 2.6 + side) * 0.35
+    ctx.save()
+    ctx.translate(-4, side * 10)
+    ctx.rotate(side * 0.9 + flap * side)
+    ctx.beginPath()
+    ctx.ellipse(0, 0, 9, 3.6, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
   }
 
   // body
@@ -1031,21 +1239,21 @@ function drawProjectile(ctx, p) {
   ctx.ellipse(p.x, p.y, 5, 2.5, 0, 0, Math.PI * 2)
   ctx.fill()
   ctx.globalAlpha = 1
-  // trail
+  // water trail
   for (let i = 1; i <= 3; i++) {
     ctx.globalAlpha = 0.18 - i * 0.05
-    ctx.fillStyle = '#ffd28a'
+    ctx.fillStyle = '#8fd8ff'
     ctx.beginPath()
     ctx.arc(p.x - i * 3.2, p.y - arc + i * 2.2, 3 - i * 0.6, 0, Math.PI * 2)
     ctx.fill()
   }
   ctx.globalAlpha = 1
-  fakeGlow(ctx, p.x, p.y - arc, 7, 'rgba(255,210,138,0.45)')
-  ctx.fillStyle = '#ffd28a'
+  fakeGlow(ctx, p.x, p.y - arc, 7, 'rgba(143,216,255,0.45)')
+  ctx.fillStyle = '#8fd8ff'
   ctx.beginPath()
   ctx.arc(p.x, p.y - arc, 4, 0, Math.PI * 2)
   ctx.fill()
-  ctx.fillStyle = '#fff2d0'
+  ctx.fillStyle = '#e6f7ff'
   ctx.beginPath()
   ctx.arc(p.x - 1, p.y - arc - 1, 1.4, 0, Math.PI * 2)
   ctx.fill()
