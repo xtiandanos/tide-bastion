@@ -153,7 +153,7 @@ export interface Wave {
   hpMul: number // difficulty ramp: scales every enemy's hp this wave
 }
 
-export const WAVES: Wave[] = [
+const HANDMADE: Wave[] = [
   { groups: [{ type: 'minnow', count: 8, gap: 1.2, delay: 0 }], bonus: 30, hpMul: 1 },
   { groups: [{ type: 'minnow', count: 12, gap: 0.9, delay: 0 }], bonus: 35, hpMul: 1.05 },
   {
@@ -217,6 +217,60 @@ export const WAVES: Wave[] = [
     bonus: 100,
     hpMul: 1.7,
   },
+]
+
+// Waves 11..300 are generated: endless-style escalation — denser mixes,
+// faster spawns, maw packs every 5/10 waves, and a rising hp multiplier.
+export const TOTAL_WAVES = 300
+
+function generateWave(n: number): Wave {
+  const t = n - 10 // 1-based beyond the handcrafted set
+  const hpMul = 1.7 * Math.pow(1.045, t)
+  const groups: WaveGroup[] = []
+  const boss = n % 10 === 0
+  const mini = n % 5 === 0
+
+  groups.push({
+    type: 'minnow',
+    count: Math.min(120, 10 + Math.floor(t * 0.8)),
+    gap: Math.max(0.22, 0.8 - t * 0.01),
+    delay: 0,
+  })
+  groups.push({
+    type: 'brute',
+    count: Math.min(40, 4 + Math.floor(t / 3)),
+    gap: 2,
+    delay: 2,
+  })
+  if (n % 2 === 0) {
+    groups.push({
+      type: 'dart',
+      count: Math.min(90, 8 + Math.floor(t * 0.6)),
+      gap: 0.4,
+      delay: 3,
+    })
+  }
+  if (n % 3 === 0) {
+    groups.push({
+      type: 'shoal',
+      count: Math.min(20, 3 + Math.floor(t / 4)),
+      gap: 2.5,
+      delay: 5,
+    })
+  }
+  if (mini) {
+    groups.push({ type: 'maw', count: 1 + Math.floor(t / 50), gap: 8, delay: 6, hp: undefined })
+  }
+  if (boss) {
+    // mega-boss packs on every 10th surge
+    groups.push({ type: 'maw', count: 2 + Math.floor(t / 30), gap: 8, delay: 0, hp: undefined })
+  }
+  return { groups, bonus: 60 + t * 2, hpMul }
+}
+
+export const WAVES: Wave[] = [
+  ...HANDMADE,
+  ...Array.from({ length: TOTAL_WAVES - HANDMADE.length }, (_, i) => generateWave(11 + i)),
 ]
 
 // ---------------------------------------------------------------- shared entity shapes
