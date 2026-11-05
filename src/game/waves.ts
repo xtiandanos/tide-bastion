@@ -37,6 +37,7 @@ export function startWave(g: Game): boolean {
   g.waveTime = 0
   g.wave++ // wave is now "in flight"; 1-based for display
   g.waveActive = true
+  g.sfx.push('wave')
   return true
 }
 
@@ -74,6 +75,7 @@ export function updateWaves(g: Game, dt: number): void {
     g.gold += wave.bonus
     if (g.wave >= WAVES.length) {
       g.won = true
+      g.sfx.push('win')
     } else if (g.auto) {
       g.autoTimer = AUTO_DELAY
     }

@@ -32,6 +32,7 @@ export function spawnEnemy(g: Game, kind: EnemyKind, dist = 0, hpOverride?: numb
   }
   g.enemies.push(e)
   if (e.boss) {
+    g.sfx.push('boss')
     g.shake = 0.6
     addEffect(g, { kind: 'ring', x: pos.x, y: pos.y, r: 60, life: 0.7, color: '#b84fd0' })
   }
@@ -54,6 +55,7 @@ export function damageEnemy(g: Game, e: Enemy, dmg: number, element?: string): v
   if (e.hp <= 0) {
     e.dead = true
     g.gold += e.bounty
+    g.sfx.push('kill')
     g.kills++
     addEffect(g, {
       kind: 'hit',
@@ -113,11 +115,13 @@ export function updateEnemies(g: Game, dt: number): void {
       // Reached the heart bastion.
       enemies.splice(i, 1)
       g.lives -= e.dmg
+      g.sfx.push('leak')
       g.shake = Math.max(g.shake, e.boss ? 0.5 : 0.2)
       addEffect(g, { kind: 'leak', x: e.x, y: e.y, r: 20, life: 0.5, color: '#ff7a6b' })
       if (g.lives <= 0) {
         g.lives = 0
         g.over = true
+        g.sfx.push('lose')
       }
       continue
     }

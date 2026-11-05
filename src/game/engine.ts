@@ -36,6 +36,7 @@ export interface Game {
   waveTime: number
   hover: Hover | null
   placing: TowerKind | null
+  sfx: string[] // drained by GameCanvas each frame → audio
   selectedId: number | null
 }
 
@@ -63,6 +64,7 @@ export function createGame(): Game {
     waveTime: 0,
     hover: null,
     placing: null,
+    sfx: [],
     selectedId: null,
   }
 }

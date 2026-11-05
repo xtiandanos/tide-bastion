@@ -1,6 +1,26 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import GameCanvas from '../game/GameCanvas'
+import { audio } from '../game/audio'
 import { ELEMENT_INFO, TOWER_ORDER, TOWER_TYPES } from '../game/config'
+
+const SETTINGS_KEY = 'tidebastion-audio'
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (raw) {
+      const s = JSON.parse(raw)
+      return {
+        music: typeof s.music === 'number' ? s.music : 0.5,
+        sfx: typeof s.sfx === 'number' ? s.sfx : 0.7,
+        muted: !!s.muted,
+      }
+    }
+  } catch {
+    // private mode / blocked storage — defaults are fine
+  }
+  return { music: 0.5, sfx: 0.7, muted: false }
+}
 
 // Page-level component: owns phase + HUD state, renders the canvas,
 // the HUD strip, the build/upgrade panel and the phase screens.
@@ -9,12 +29,28 @@ export default function GamePage() {
   const [runToken, setRunToken] = useState(0)
   const [speed, setSpeed] = useState(1)
   const [hud, setHud] = useState(null)
+  const [settings, setSettings] = useState(loadSettings)
+  const [showSettings, setShowSettings] = useState(false)
   const apiRef = useRef({})
 
+  // keep the audio engine in sync with settings; persist them
+  useEffect(() => {
+    audio.setMusicVolume(settings.music)
+    audio.setSfxVolume(settings.sfx)
+    audio.setMuted(settings.muted)
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+    } catch {
+      // ignore — storage may be unavailable
+    }
+  }, [settings])
+
   const start = () => {
+    audio.init() // must happen inside the click gesture
     setRunToken((n) => n + 1)
     setHud(null)
     setSpeed(1)
+    setShowSettings(false)
     setPhase('playing')
   }
 
@@ -65,6 +101,13 @@ export default function GamePage() {
               title="Auto-surge: the next wave fires itself after a 3s countdown"
             >
               {hud.auto ? 'Auto ON' : 'Auto OFF'}
+            </button>
+            <button
+              className="tb-btn tb-gear"
+              onClick={() => setShowSettings((s) => !s)}
+              title="Sound settings"
+            >
+              {settings.muted ? '🔇' : '🔊'}
             </button>
             <button
               className="tb-btn tb-speed"
@@ -138,6 +181,45 @@ export default function GamePage() {
             </div>
           )}
           {placing && <p className="tb-hint">Tap a buildable tile to place — Esc or re-click to cancel</p>}
+        </div>
+      )}
+
+      {showSettings && (
+        <div className="tb-screen tb-settings">
+          <h2>⚙️ Sound Settings</h2>
+          <label className="tb-slider">
+            <span>🎵 Music</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={settings.music}
+              onChange={(e) => setSettings((s) => ({ ...s, music: +e.target.value }))}
+            />
+            <em>{Math.round(settings.music * 100)}%</em>
+          </label>
+          <label className="tb-slider">
+            <span>⚔️ Sound effects</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={settings.sfx}
+              onChange={(e) => setSettings((s) => ({ ...s, sfx: +e.target.value }))}
+            />
+            <em>{Math.round(settings.sfx * 100)}%</em>
+          </label>
+          <label className="tb-check">
+            <input
+              type="checkbox"
+              checked={settings.muted}
+              onChange={(e) => setSettings((s) => ({ ...s, muted: e.target.checked }))}
+            />
+            <span>Mute everything</span>
+          </label>
+          <p className="tb-hint">Settings are saved in this browser.</p>
         </div>
       )}
 

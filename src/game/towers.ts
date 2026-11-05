@@ -73,6 +73,7 @@ export function placeTower(g: Game, kind: TowerKind, col: number, row: number): 
     fireFlash: 99,
   }
   g.gold -= type.cost
+  g.sfx.push('place')
   g.towers.push(tower)
   g.occupied.add(`${col},${row}`)
   return tower
@@ -83,6 +84,7 @@ export function upgradeTower(g: Game, tower: Tower): boolean {
   const cost = upgradeCost(tower)
   if (g.gold < cost) return false
   g.gold -= cost
+  g.sfx.push('upgrade')
   tower.level++
   tower.invested += cost
   return true
@@ -90,6 +92,7 @@ export function upgradeTower(g: Game, tower: Tower): boolean {
 
 export function sellTower(g: Game, tower: Tower): void {
   g.gold += sellValue(tower)
+  g.sfx.push('sell')
   g.occupied.delete(`${tower.col},${tower.row}`)
   const i = g.towers.indexOf(tower)
   if (i >= 0) g.towers.splice(i, 1)
@@ -130,6 +133,7 @@ function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
   switch (tower.kind) {
     case 'harpoon': {
       // physical: pierces brute armor (handled in damageEnemy)
+      g.sfx.push('shot')
       damageEnemy(g, target, s.dmg, 'physical')
       addEffect(g, {
         kind: 'harpoon',
@@ -143,6 +147,7 @@ function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
       break
     }
     case 'frost': {
+      g.sfx.push('freeze')
       damageEnemy(g, target, s.dmg, 'ice')
       slowEnemy(g, target, 1 - s.slowPct, s.slowDur)
       addEffect(g, {
@@ -156,6 +161,7 @@ function fire(g: Game, tower: Tower, target: Enemy, s: Stats): void {
       break
     }
     case 'battery': {
+      g.sfx.push('launch')
       const d = Math.hypot(target.x - tower.x, target.y - tower.y)
       g.projectiles.push({
         x: tower.x,
@@ -184,6 +190,7 @@ function chainLightning(g: Game, tower: Tower, primary: Enemy, dmg: number): voi
     [primary.x, primary.y],
   ]
   // lightning: brief stun on the primary + wet-conduction bonus in damageEnemy
+  g.sfx.push('zap')
   primary.stunUntil = g.t + 0.25
   damageEnemy(g, primary, dmg, 'lightning')
 
@@ -230,6 +237,7 @@ export function updateProjectiles(g: Game, dt: number): void {
           }
         }
         addEffect(g, { kind: 'boom', x: p.tx, y: p.ty, r: p.splash, life: 0.35, color: '#8fd8ff' })
+        g.sfx.push('boom')
       }
       projectiles.splice(i, 1)
       continue

@@ -12,6 +12,7 @@ import {
   setAuto,
 } from './engine'
 import { TILE, TOWER_ORDER } from './config'
+import { audio } from './audio'
 import './game.css'
 
 // Thin canvas shell: owns the rAF loop and raw input, reports to React only
@@ -159,6 +160,11 @@ export default function GameCanvas({ phase, runToken, speed, apiRef, onHud, onOv
       if (g && ctx) {
         if (phaseRef.current === 'playing' && !g.over && !g.won) {
           update(g, raw * speedRef.current)
+          // drain engine sound events → procedural audio
+          if (g.sfx.length) {
+            for (const name of g.sfx) audio.play(name)
+            g.sfx.length = 0
+          }
           const snap = JSON.stringify(hudSnapshot(g))
           if (snap !== lastHud) {
             lastHud = snap
