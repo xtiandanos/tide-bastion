@@ -1,0 +1,257 @@
+/* game.css — HUD, build panel, phase screens */
+
+.tb-page {
+  width: 100%;
+  max-width: 840px;
+  padding: 12px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tb-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tb-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+}
+
+.tb-header h1 span {
+  color: var(--tb-accent);
+}
+
+.tb-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tb-stat {
+  background: var(--tb-panel);
+  border: 1px solid var(--tb-line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tb-stat.gold {
+  color: var(--tb-gold);
+  font-weight: 700;
+}
+
+.tb-hearts {
+  color: #ff8b9e;
+  letter-spacing: 0.1em;
+}
+
+.tb-hearts[data-crisis] {
+  color: var(--tb-danger);
+  animation: tb-pulse 0.6s infinite;
+}
+
+@keyframes tb-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.tb-canvas {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 800 / 520;
+  border-radius: 12px;
+  border: 1px solid var(--tb-line);
+  display: block;
+  cursor: crosshair;
+  background: #072e3d;
+}
+
+/* buttons */
+
+.tb-btn {
+  background: var(--tb-panel);
+  color: var(--tb-text);
+  border: 1px solid var(--tb-line);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.tb-btn:hover:not(:disabled) {
+  border-color: var(--tb-accent);
+}
+
+.tb-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tb-send:not(:disabled) {
+  border-color: var(--tb-accent);
+  color: var(--tb-accent);
+  font-weight: 700;
+}
+
+.tb-sell:not(:disabled) {
+  color: var(--tb-danger);
+}
+
+/* build panel */
+
+.tb-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.tb-card {
+  flex: 1 1 150px;
+  min-width: 150px;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  background: var(--tb-panel);
+  color: var(--tb-text);
+  border: 1px solid var(--tb-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font: inherit;
+  cursor: pointer;
+  position: relative;
+}
+
+.tb-card:hover:not(.poor) {
+  border-color: var(--tb-accent);
+}
+
+.tb-card.active {
+  border-color: var(--tb-accent);
+  box-shadow: 0 0 0 1px var(--tb-accent), 0 0 14px rgba(126, 232, 208, 0.25);
+}
+
+.tb-card.poor {
+  opacity: 0.5;
+}
+
+.tb-card strong {
+  font-size: 0.9rem;
+}
+
+.tb-card-cost {
+  color: var(--tb-gold);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.tb-card small {
+  color: var(--tb-dim);
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.tb-card-key {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.65rem;
+  color: var(--tb-dim);
+  border: 1px solid var(--tb-line);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.tb-selected {
+  flex: 1 1 180px;
+  background: var(--tb-panel);
+  border: 1px solid var(--tb-accent);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.tb-selected-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tb-maxed {
+  color: var(--tb-accent);
+  font-size: 0.85rem;
+}
+
+.tb-hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--tb-dim);
+  font-size: 0.8rem;
+}
+
+/* phase screens */
+
+.tb-screen {
+  background: var(--tb-panel);
+  border: 1px solid var(--tb-line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  text-align: center;
+}
+
+.tb-screen h2 {
+  margin: 4px 0 8px;
+}
+
+.tb-screen p {
+  color: var(--tb-dim);
+  margin: 0 0 12px;
+}
+
+.tb-screen ul {
+  text-align: left;
+  color: var(--tb-dim);
+  font-size: 0.85rem;
+  margin: 0 auto 16px;
+  max-width: 420px;
+  padding-left: 20px;
+}
+
+.tb-screen li {
+  margin-bottom: 4px;
+}
+
+.tb-start {
+  border-color: var(--tb-accent);
+  color: var(--tb-accent);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 10px 26px;
+}
+
+@media (max-width: 700px) {
+  .tb-page {
+    padding: 10px 10px 32px;
+  }
+
+  .tb-card {
+    min-width: 130px;
+  }
+}

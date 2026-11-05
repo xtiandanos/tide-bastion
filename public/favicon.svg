@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0b3a4a"/>
+  <!-- trident -->
+  <g stroke="#7ee8d0" stroke-width="4" stroke-linecap="round" fill="none">
+    <path d="M32 14 V44"/>
+    <path d="M22 14 V20 Q22 26 32 26 Q42 26 42 20 V14"/>
+    <path d="M26 44 H38"/>
+  </g>
+  <!-- wave -->
+  <path d="M8 52 Q16 46 24 52 T40 52 T56 52" stroke="#3fc1c9" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>
