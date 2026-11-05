@@ -111,27 +111,27 @@ export interface EnemyType {
 }
 
 export const ENEMY_TYPES: Record<EnemyKind, EnemyType> = {
-  minnow: { kind: 'minnow', name: 'Minnow', hp: 30, speed: 60, bounty: 6, dmg: 1, radius: 16 },
-  dart: { kind: 'dart', name: 'Dart', hp: 18, speed: 110, bounty: 5, dmg: 1, radius: 13 },
+  minnow: { kind: 'minnow', name: 'Minnow', hp: 45, speed: 70, bounty: 6, dmg: 1, radius: 16 },
+  dart: { kind: 'dart', name: 'Dart', hp: 28, speed: 120, bounty: 5, dmg: 1, radius: 13 },
   shoal: {
     kind: 'shoal',
     name: 'Shoal Spawner',
-    hp: 20,
-    speed: 70,
+    hp: 35,
+    speed: 75,
     bounty: 4,
     dmg: 1,
     radius: 19,
-    spawner: { kind: 'fry', count: 5, interval: 2.2 },
+    spawner: { kind: 'fry', count: 5, interval: 2 },
   },
-  fry: { kind: 'fry', name: 'Fry', hp: 10, speed: 80, bounty: 2, dmg: 1, radius: 9 },
-  brute: { kind: 'brute', name: 'Brute', hp: 140, speed: 38, bounty: 14, dmg: 2, radius: 22 },
+  fry: { kind: 'fry', name: 'Fry', hp: 16, speed: 85, bounty: 2, dmg: 1, radius: 9 },
+  brute: { kind: 'brute', name: 'Brute', hp: 220, speed: 42, bounty: 14, dmg: 3, radius: 22 },
   maw: {
     kind: 'maw',
     name: 'The Maw',
-    hp: 450,
+    hp: 700,
     speed: 30,
     bounty: 80,
-    dmg: 6,
+    dmg: 8,
     radius: 32,
     boss: true,
   },
@@ -155,14 +155,14 @@ export interface Wave {
 
 const HANDMADE: Wave[] = [
   { groups: [{ type: 'minnow', count: 8, gap: 1.2, delay: 0 }], bonus: 30, hpMul: 1 },
-  { groups: [{ type: 'minnow', count: 12, gap: 0.9, delay: 0 }], bonus: 35, hpMul: 1.05 },
+  { groups: [{ type: 'minnow', count: 12, gap: 0.9, delay: 0 }], bonus: 35, hpMul: 1.15 },
   {
     groups: [
       { type: 'dart', count: 10, gap: 0.7, delay: 0 },
       { type: 'minnow', count: 6, gap: 1.2, delay: 4 },
     ],
     bonus: 40,
-    hpMul: 1.1,
+    hpMul: 1.3,
   },
   {
     groups: [
@@ -170,52 +170,52 @@ const HANDMADE: Wave[] = [
       { type: 'minnow', count: 8, gap: 1, delay: 2 },
     ],
     bonus: 45,
-    hpMul: 1.2,
+    hpMul: 1.5,
   },
   {
     groups: [
       { type: 'brute', count: 4, gap: 4, delay: 0 },
       { type: 'minnow', count: 10, gap: 0.8, delay: 1 },
-      { type: 'maw', count: 1, gap: 0, delay: 10, hp: 500 },
+      { type: 'maw', count: 1, gap: 0, delay: 10, hp: 800 },
     ],
     bonus: 60,
-    hpMul: 1.25,
+    hpMul: 1.6,
   },
-  { groups: [{ type: 'dart', count: 16, gap: 0.5, delay: 0 }], bonus: 45, hpMul: 1.35 },
+  { groups: [{ type: 'dart', count: 18, gap: 0.45, delay: 0 }], bonus: 45, hpMul: 1.8 },
   {
     groups: [
       { type: 'brute', count: 8, gap: 2.5, delay: 0 },
-      { type: 'shoal', count: 3, gap: 3, delay: 6 },
+      { type: 'shoal', count: 4, gap: 2.5, delay: 5 },
     ],
     bonus: 50,
-    hpMul: 1.4,
+    hpMul: 2.0,
   },
   {
     groups: [
-      { type: 'maw', count: 2, gap: 8, delay: 0, hp: 750 },
-      { type: 'dart', count: 12, gap: 0.6, delay: 4 },
+      { type: 'maw', count: 2, gap: 8, delay: 0, hp: 1100 },
+      { type: 'dart', count: 14, gap: 0.5, delay: 4 },
     ],
     bonus: 55,
-    hpMul: 1.45,
+    hpMul: 2.2,
   },
   {
     groups: [
       { type: 'brute', count: 10, gap: 2, delay: 0 },
       { type: 'shoal', count: 5, gap: 2.5, delay: 5 },
-      { type: 'dart', count: 10, gap: 0.5, delay: 8 },
+      { type: 'dart', count: 12, gap: 0.45, delay: 8 },
     ],
     bonus: 60,
-    hpMul: 1.55,
+    hpMul: 2.5,
   },
   {
     groups: [
-      { type: 'maw', count: 1, gap: 0, delay: 0, hp: 1400 },
+      { type: 'maw', count: 1, gap: 0, delay: 0, hp: 2000 },
       { type: 'brute', count: 8, gap: 3, delay: 6 },
-      { type: 'dart', count: 14, gap: 0.5, delay: 12 },
-      { type: 'minnow', count: 16, gap: 0.6, delay: 18 },
+      { type: 'dart', count: 16, gap: 0.45, delay: 12 },
+      { type: 'minnow', count: 18, gap: 0.5, delay: 16 },
     ],
     bonus: 100,
-    hpMul: 1.7,
+    hpMul: 2.8,
   },
 ]
 
@@ -225,28 +225,28 @@ export const TOTAL_WAVES = 300
 
 function generateWave(n: number): Wave {
   const t = n - 10 // 1-based beyond the handcrafted set
-  const hpMul = 1.7 * Math.pow(1.045, t)
+  const hpMul = 2.8 * Math.pow(1.05, t)
   const groups: WaveGroup[] = []
   const boss = n % 10 === 0
   const mini = n % 5 === 0
 
   groups.push({
     type: 'minnow',
-    count: Math.min(120, 10 + Math.floor(t * 0.8)),
-    gap: Math.max(0.22, 0.8 - t * 0.01),
+    count: Math.min(140, 12 + Math.floor(t * 1)),
+    gap: Math.max(0.2, 0.75 - t * 0.01),
     delay: 0,
   })
   groups.push({
     type: 'brute',
-    count: Math.min(40, 4 + Math.floor(t / 3)),
+    count: Math.min(50, 6 + Math.floor(t / 2.5)),
     gap: 2,
     delay: 2,
   })
   if (n % 2 === 0) {
     groups.push({
       type: 'dart',
-      count: Math.min(90, 8 + Math.floor(t * 0.6)),
-      gap: 0.4,
+      count: Math.min(100, 10 + Math.floor(t * 0.8)),
+      gap: 0.35,
       delay: 3,
     })
   }
